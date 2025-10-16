@@ -1,148 +1,202 @@
 import React, { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { Sparkles, TrendingUp, Users, Award, Star, ArrowRight, GraduationCap, Briefcase, Code, Palette, Heart, Zap, Sun, Moon } from "lucide-react";
-import { Link } from 'react-router-dom';
-import { cn } from "../lib/utils";
-import { Card, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
+import { Sparkles, TrendingUp, Users, Award, Star, ArrowRight, Code, Palette, Heart, Zap, Briefcase, Target, Rocket, Globe, ChevronRight } from "lucide-react";
 
-// Aurora Background Component
-const AuroraBackground = ({ className, children, showRadialGradient = true, ...props }) => {
+// Starfield Background Component
+const StarfieldBackground = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    let shootingStars = [];
+    let animationFrameId;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    class Star {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2;
+        this.speedX = (Math.random() - 0.5) * 0.3;
+        this.speedY = (Math.random() - 0.5) * 0.3;
+        this.opacity = Math.random() * 0.5 + 0.5;
+        this.twinkleSpeed = Math.random() * 0.02 + 0.01;
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.opacity += this.twinkleSpeed;
+        
+        if (this.opacity > 1 || this.opacity < 0.3) {
+          this.twinkleSpeed *= -1;
+        }
+
+        if (this.x < 0) this.x = canvas.width;
+        if (this.x > canvas.width) this.x = 0;
+        if (this.y < 0) this.y = canvas.height;
+        if (this.y > canvas.height) this.y = 0;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.fill();
+        
+        // Add glow
+        if (this.size > 1) {
+          ctx.shadowBlur = 3;
+          ctx.shadowColor = 'white';
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+    }
+
+    class ShootingStar {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height / 2;
+        this.length = Math.random() * 80 + 40;
+        this.speed = Math.random() * 10 + 10;
+        this.opacity = 1;
+        this.angle = Math.PI / 4;
+      }
+
+      update() {
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+        this.opacity -= 0.02;
+
+        if (this.opacity <= 0) {
+          this.reset();
+        }
+      }
+
+      draw() {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(
+          this.x - Math.cos(this.angle) * this.length,
+          this.y - Math.sin(this.angle) * this.length
+        );
+        ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // Create stars
+    for (let i = 0; i < 400; i++) {
+      stars.push(new Star());
+    }
+
+    // Create shooting stars
+    for (let i = 0; i < 3; i++) {
+      shootingStars.push(new ShootingStar());
+    }
+
+    const animate = () => {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      stars.forEach(star => {
+        star.update();
+        star.draw();
+      });
+
+      shootingStars.forEach(star => {
+        star.update();
+        star.draw();
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0" />;
+};
+
+// Floating Card Component
+const FloatingCard = ({ children, delay = 0 }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => setIsVisible(true), delay);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) observer.observe(ref.current);
+
+    return () => observer.disconnect();
+  }, [delay]);
+
   return (
     <div
-      className={cn(
-        "relative flex flex-col h-full items-center justify-center bg-zinc-50 dark:bg-neutral-950 text-slate-950 transition-bg",
-        className
-      )}
-      {...props}
+      ref={ref}
+      className={`transition-all duration-1000 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+      }`}
     >
-      <div className="absolute inset-0 overflow-hidden">
-        <div
-          className={cn(
-            `[--white-gradient:repeating-linear-gradient(100deg,var(--white)_0%,var(--white)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--white)_16%)]
-            [--dark-gradient:repeating-linear-gradient(100deg,var(--black)_0%,var(--black)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--black)_16%)]
-            [--aurora:repeating-linear-gradient(100deg,var(--blue-500)_10%,var(--indigo-300)_15%,var(--blue-300)_20%,var(--violet-200)_25%,var(--blue-400)_30%)]
-            [background-image:var(--white-gradient),var(--aurora)]
-            dark:[background-image:var(--dark-gradient),var(--aurora)]
-            [background-size:300%,_200%]
-            [background-position:50%_50%,50%_50%]
-            filter blur-[10px] invert dark:invert-0
-            after:content-[""] after:absolute after:inset-0 after:[background-image:var(--white-gradient),var(--aurora)] 
-            after:dark:[background-image:var(--dark-gradient),var(--aurora)]
-            after:[background-size:200%,_100%] 
-            after:animate-aurora after:[background-attachment:fixed] after:mix-blend-difference
-            pointer-events-none
-            absolute -inset-[10px] opacity-50 will-change-transform`,
-            showRadialGradient &&
-              `[mask-image:radial-gradient(ellipse_at_100%_0%,black_10%,var(--transparent)_70%)]`
-          )}
-        ></div>
-      </div>
       {children}
     </div>
   );
 };
 
-// Text Shimmer Component
-function TextShimmer({ children, className, duration = 2, spread = 2 }) {
-  const dynamicSpread = React.useMemo(() => {
-    return children.length * spread;
-  }, [children, spread]);
-
-  return (
-    <motion.span
-      className={cn(
-        'relative inline-block bg-[length:250%_100%,auto] bg-clip-text',
-        'text-transparent [--base-color:#a1a1aa] [--base-gradient-color:#000]',
-        '[--bg:linear-gradient(90deg,#0000_calc(50%-var(--spread)),var(--base-gradient-color),#0000_calc(50%+var(--spread)))] [background-repeat:no-repeat,padding-box]',
-        'dark:[--base-color:#71717a] dark:[--base-gradient-color:#ffffff] dark:[--bg:linear-gradient(90deg,#0000_calc(50%-var(--spread)),var(--base-gradient-color),#0000_calc(50%+var(--spread)))]',
-        className
-      )}
-      initial={{ backgroundPosition: '100% center' }}
-      animate={{ backgroundPosition: '0% center' }}
-      transition={{
-        repeat: Infinity,
-        duration,
-        ease: "linear",
-      }}
-      style={
-        {
-          '--spread': `${dynamicSpread}px`,
-          backgroundImage: `var(--bg), linear-gradient(var(--base-color), var(--base-color))`,
-        }
-      }
-    >
-      {children}
-    </motion.span>
-  );
-}
-
-// Glow Card Component
-const glowColorMap = {
-  blue: { base: 220, spread: 200 },
-  purple: { base: 280, spread: 300 },
-  green: { base: 120, spread: 200 },
-  red: { base: 0, spread: 200 },
-  orange: { base: 30, spread: 200 }
-};
-
-const GlowCard = ({ children, className = '', glowColor = 'blue' }) => {
+// Glow Card with Mouse Effect
+const GlowCard = ({ children }) => {
   const cardRef = useRef(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  useEffect(() => {
-    const syncPointer = (e) => {
-      const { clientX: x, clientY: y } = e;
-      
-      if (cardRef.current) {
-        cardRef.current.style.setProperty('--x', x.toFixed(2));
-        cardRef.current.style.setProperty('--xp', (x / window.innerWidth).toFixed(2));
-        cardRef.current.style.setProperty('--y', y.toFixed(2));
-        cardRef.current.style.setProperty('--yp', (y / window.innerHeight).toFixed(2));
-      }
-    };
-
-    document.addEventListener('pointermove', syncPointer);
-    return () => document.removeEventListener('pointermove', syncPointer);
-  }, []);
-
-  const { base, spread } = glowColorMap[glowColor];
+  const handleMouseMove = (e) => {
+    const rect = cardRef.current.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
 
   return (
     <div
       ref={cardRef}
-      data-glow
+      onMouseMove={handleMouseMove}
+      className="relative group rounded-2xl overflow-hidden"
       style={{
-        '--base': base,
-        '--spread': spread,
-        '--radius': '14',
-        '--border': '2',
-        '--backdrop': 'hsl(0 0% 60% / 0.12)',
-        '--backup-border': 'var(--backdrop)',
-        '--size': '200',
-        '--border-size': 'calc(var(--border, 2) * 1px)',
-        '--spotlight-size': 'calc(var(--size, 150) * 1px)',
-        '--hue': 'calc(var(--base) + (var(--xp, 0) * var(--spread, 0)))',
-        backgroundImage: `radial-gradient(
-          var(--spotlight-size) var(--spotlight-size) at
-          calc(var(--x, 0) * 1px)
-          calc(var(--y, 0) * 1px),
-          hsl(var(--hue, 210) calc(var(--saturation, 100) * 1%) calc(var(--lightness, 70) * 1%) / var(--bg-spot-opacity, 0.1)), transparent
-        )`,
-        backgroundColor: 'var(--backdrop, transparent)',
-        backgroundSize: 'calc(100% + (2 * var(--border-size))) calc(100% + (2 * var(--border-size)))',
-        backgroundPosition: '50% 50%',
-        backgroundAttachment: 'fixed',
-        border: 'var(--border-size) solid var(--backup-border)',
-        position: 'relative',
-        touchAction: 'none',
+        background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(255, 255, 255, 0.1), transparent 40%)`
       }}
-      className={cn(
-        "rounded-2xl relative p-6 backdrop-blur-[5px] transition-all duration-300 hover:scale-105",
-        className
-      )}
     >
-      {children}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="relative bg-black/40 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:border-white/40 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-white/10">
+        {children}
+      </div>
     </div>
   );
 };
@@ -153,86 +207,86 @@ const careerPaths = [
     id: 1,
     title: "Software Developer",
     icon: Code,
-    description: "Build amazing applications and solve complex problems with code",
-    color: "blue",
+    description: "Build revolutionary applications that change the world",
     skills: ["JavaScript", "Python", "React"],
     salary: "$70k - $150k",
-    demand: "Very High"
+    demand: "Very High",
+    growth: "+22%"
   },
   {
     id: 2,
     title: "UX/UI Designer",
     icon: Palette,
-    description: "Create beautiful and intuitive user experiences",
-    color: "purple",
+    description: "Craft stunning experiences that users love",
     skills: ["Figma", "Adobe XD", "User Research"],
     salary: "$60k - $120k",
-    demand: "High"
+    demand: "High",
+    growth: "+16%"
   },
   {
     id: 3,
     title: "Data Scientist",
     icon: TrendingUp,
-    description: "Analyze data and extract meaningful insights",
-    color: "green",
-    skills: ["Python", "Machine Learning", "Statistics"],
+    description: "Unlock insights from data to drive decisions",
+    skills: ["Python", "ML", "Statistics"],
     salary: "$80k - $160k",
-    demand: "Very High"
+    demand: "Very High",
+    growth: "+28%"
   },
   {
     id: 4,
     title: "Product Manager",
     icon: Briefcase,
-    description: "Lead product strategy and drive innovation",
-    color: "orange",
+    description: "Lead innovation and bring products to life",
     skills: ["Strategy", "Communication", "Analytics"],
     salary: "$90k - $180k",
-    demand: "High"
+    demand: "High",
+    growth: "+19%"
   }
 ];
 
 // Statistics Data
 const stats = [
   { label: "Active Students", value: "50,000+", icon: Users },
-  { label: "Career Paths", value: "200+", icon: Briefcase },
+  { label: "Career Paths", value: "200+", icon: Target },
   { label: "Success Rate", value: "94%", icon: Award },
-  { label: "Partner Companies", value: "500+", icon: Star }
+  { label: "Partner Companies", value: "500+", icon: Globe }
 ];
 
 // Testimonials Data
 const testimonials = [
   {
-    name: "Sarah John",
+    name: "Sarah Johnson",
     role: "Software Engineer at Google",
-    content: "CareerVerse helped me discover my passion for coding and land my dream job!",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
+    content: "CareerVerse transformed my career journey. The insights were incredible and helped me land my dream role!",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
+    rating: 5
   },
   {
     name: "Michael Chen",
     role: "UX Designer at Apple",
-    content: "The career exploration tools are incredible. I found exactly what I was looking for.",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael"
+    content: "The most comprehensive career platform I've used. Every feature is thoughtfully designed and genuinely helpful.",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
+    rating: 5
   },
   {
     name: "Emily Rodriguez",
     role: "Data Scientist at Meta",
-    content: "Best platform for students to explore and plan their career journey!",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emily"
+    content: "Game-changing platform! It helped me discover opportunities I didn't even know existed.",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emily",
+    rating: 5
   }
 ];
 
-// Main Component
 export default function Landing() {
-  const [activeCard, setActiveCard] = useState(null);
-  const [theme, setTheme] = useState('system');
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
-  const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-  });
+  const [scrollY, setScrollY] = useState(0);
 
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -241,224 +295,231 @@ export default function Landing() {
     return () => clearInterval(interval);
   }, []);
 
-  // theme init (prefers-color-scheme + localStorage)
-  useEffect(() => {
-    const stored = localStorage.getItem('cv-theme');
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initial = stored || (prefersDark ? 'dark' : 'light');
-    setTheme(initial);
-    document.documentElement.classList.toggle('dark', initial === 'dark');
-  }, []);
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    localStorage.setItem('cv-theme', next);
-    document.documentElement.classList.toggle('dark', next === 'dark');
-  };
-
   return (
-    <div ref={containerRef} className="min-h-screen bg-background">
-      {/* Hero Section with Aurora Background */}
-      <AuroraBackground className="min-h-screen">
-        <motion.div
-          style={{ opacity, scale }}
-          className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
-        >
-          {/* Navigation removed: using global navbar in App.jsx */}
+    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes shimmer {
+          0% { background-position: -1000px 0; }
+          100% { background-position: 1000px 0; }
+        }
+        
+        @keyframes pulse-glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(255,255,255,0.1); }
+          50% { box-shadow: 0 0 40px rgba(255,255,255,0.3), 0 0 60px rgba(255,255,255,0.1); }
+        }
+        
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+        .animate-shimmer {
+          background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+          background-size: 1000px 100%;
+          animation: shimmer 3s infinite;
+        }
+      `}</style>
 
-          {/* Hero Content */}
-          <div className="text-center space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-            >
-              <Badge className="mb-4" variant="secondary">
-                <Sparkles className="w-3 h-3 mr-1 text-indigo-500 dark:text-yellow-400" />
-                <span className="text-indigo-700 dark:text-yellow-300">Explore Your Future</span>
-              </Badge>
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-fuchsia-500 to-pink-500 dark:from-yellow-300 dark:via-pink-400 dark:to-purple-600">
-                Discover Your
-                <br />
-                <TextShimmer
-                  className="text-6xl md:text-8xl font-bold !text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 dark:from-yellow-400 dark:via-pink-400 dark:to-fuchsia-500"
-                  duration={3}
-                >
-                  Dream Career
-                </TextShimmer>
-              </h1>
-              <p className="text-xl md:text-2xl max-w-3xl mx-auto text-gradient bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-700 to-indigo-700 dark:from-yellow-200 dark:to-pink-300">
-                Explore <span className="font-bold text-indigo-600 dark:text-yellow-400">200+ career paths</span>, connect with <span className="font-bold text-pink-600 dark:text-pink-300">mentors</span>,
-                and build your <span className="font-bold text-fuchsia-700 dark:text-purple-300">future</span> with confidence.
-              </p>
-            </motion.div>
+      <StarfieldBackground />
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex flex-wrap gap-4 justify-center"
-            >
-              <Button size="lg" asChild className="gap-2">
-                <Link to="/interests">
-                  Start Exploring <ArrowRight className="w-4 h-4" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/mindmap">Watch Demo</Link>
-              </Button>
-            </motion.div>
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div 
+          className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent"
+          style={{ transform: `translateY(${scrollY * 0.5}px)` }}
+        />
+        
+        <div className="relative z-10 max-w-7xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-xl mb-8 animate-pulse-glow">
+            <Sparkles className="w-4 h-4 text-white animate-pulse" />
+            <span className="text-sm font-medium text-white">
+              Explore 200+ Career Paths
+            </span>
+          </div>
+
+          <h1 className="text-6xl md:text-8xl font-bold mb-6 leading-tight">
+            <span className="block text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]">
+              Discover Your
+            </span>
+            <span className="block text-white drop-shadow-[0_0_50px_rgba(255,255,255,0.8)] animate-shimmer bg-clip-text">
+              Dream Career
+            </span>
+          </h1>
+
+          <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-12 leading-relaxed drop-shadow-lg">
+            Unlock your potential with AI-powered career guidance, personalized roadmaps, and connect with industry mentors
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20">
+            <button className="group relative px-8 py-4 bg-white text-black rounded-full font-semibold text-lg overflow-hidden hover:scale-105 transition-transform hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]">
+              <span className="relative z-10 flex items-center gap-2">
+                Start Your Journey
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </button>
+            
+            <button className="px-8 py-4 rounded-full font-semibold text-lg border-2 border-white/30 hover:border-white hover:bg-white/10 transition-all backdrop-blur-sm">
+              Watch Demo
+            </button>
           </div>
 
           {/* Animated Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20"
-          >
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.8 + index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-6 rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200 dark:border-neutral-800"
-              >
-                <stat.icon className="w-8 h-8 mx-auto mb-2 text-primary" />
-                <div className="text-3xl font-bold mb-1 text-primary">{stat.value}</div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">{stat.label}</div>
-              </motion.div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            {stats.map((stat, i) => (
+              <FloatingCard key={i} delay={i * 100}>
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 rounded-2xl blur-xl transition-opacity duration-500" />
+                  <div className="relative bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:border-white/40 transition-all hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                    <stat.icon className="w-10 h-10 mx-auto mb-3 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                    <div className="text-4xl font-bold mb-2 text-white drop-shadow-lg">
+                      {stat.value}
+                    </div>
+                    <div className="text-sm text-gray-300">{stat.label}</div>
+                  </div>
+                </div>
+              </FloatingCard>
             ))}
-          </motion.div>
-        </motion.div>
-      </AuroraBackground>
+          </div>
+        </div>
+
+        {/* Floating Nebula Effects */}
+        <div className="absolute top-20 left-10 w-40 h-40 bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '0s' }} />
+        <div className="absolute bottom-20 right-10 w-60 h-60 bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/4 w-32 h-32 bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }} />
+      </section>
 
       {/* Career Cards Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Explore Career Paths
-          </h2>
-          <p className="text-xl text-neutral-600 dark:text-neutral-300">
-            Discover opportunities that match your passion and skills
-          </p>
-        </motion.div>
+      <section className="relative py-32 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]">
+              Trending Career Paths
+            </h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Explore high-demand careers with incredible growth potential
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {careerPaths.map((career, index) => (
-            <motion.div
-              key={career.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              onHoverStart={() => setActiveCard(career.id)}
-              onHoverEnd={() => setActiveCard(null)}
-            >
-              <GlowCard glowColor={career.color} className="h-full">
-                <Card className="h-full border-0 bg-transparent">
-                  <CardContent className="p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <career.icon className="w-10 h-10 text-primary" />
-                      <Badge variant="secondary">{career.demand}</Badge>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {careerPaths.map((career, i) => (
+              <FloatingCard key={career.id} delay={i * 150}>
+                <GlowCard>
+                  <div className="relative">
+                    <div className="absolute -top-4 -right-4 px-3 py-1 bg-white text-black rounded-full text-xs font-bold shadow-[0_0_20px_rgba(255,255,255,0.5)]">
+                      {career.growth}
                     </div>
-                    <h3 className="text-2xl font-bold">{career.title}</h3>
-                    <p className="text-neutral-600 dark:text-neutral-400">{career.description}</p>
-                    <div className="space-y-2">
+                    
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-3 mb-4 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                      <career.icon className="w-full h-full text-white" />
+                    </div>
+                    
+                    <h3 className="text-2xl font-bold mb-3 text-white">{career.title}</h3>
+                    <p className="text-gray-300 mb-4 text-sm leading-relaxed">{career.description}</p>
+                    
+                    <div className="space-y-3 mb-4">
                       <div className="flex flex-wrap gap-2">
                         {career.skills.map((skill) => (
-                          <Badge key={skill} variant="outline">
+                          <span key={skill} className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium text-gray-200 border border-white/20">
                             {skill}
-                          </Badge>
+                          </span>
                         ))}
                       </div>
-                      <div className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">
-                        {career.salary}
+                      
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-bold text-white">
+                          {career.salary}
+                        </span>
+                        <span className="px-3 py-1 bg-white/20 text-white rounded-full text-xs font-semibold">
+                          {career.demand}
+                        </span>
                       </div>
                     </div>
-                    <Button className="w-full" variant={activeCard === career.id ? "default" : "outline"}>
-                      Learn More
-                    </Button>
-                  </CardContent>
-                </Card>
-              </GlowCard>
-            </motion.div>
-          ))}
+                    
+                    <button className="w-full py-3 bg-white text-black rounded-xl font-semibold hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all flex items-center justify-center gap-2 group">
+                      Explore Path
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                </GlowCard>
+              </FloatingCard>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/50">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Student Success Stories
+      <section className="relative py-32 px-4 sm:px-6 lg:px-8">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent" />
+        
+        <div className="relative max-w-5xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]">
+              Success Stories
             </h2>
-            <p className="text-xl text-muted-foreground">
-              Hear from students who found their dream careers
+            <p className="text-xl text-gray-300">
+              Real students, real transformations
             </p>
-          </motion.div>
+          </div>
 
           <div className="relative">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentTestimonial}
-                initial={{ opacity: 0, x: 100 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -100 }}
-                transition={{ duration: 0.5 }}
-                className="bg-background rounded-3xl p-8 md:p-12 shadow-xl"
-              >
-                <div className="flex items-center gap-4 mb-6">
-                  <img
-                    src={testimonials[currentTestimonial].avatar}
-                    alt={testimonials[currentTestimonial].name}
-                    className="w-16 h-16 rounded-full"
-                  />
-                  <div>
-                    <h4 className="font-bold text-lg">
-                      {testimonials[currentTestimonial].name}
-                    </h4>
-                    <p className="text-muted-foreground">
-                      {testimonials[currentTestimonial].role}
+            <div className="overflow-hidden rounded-3xl">
+              {testimonials.map((testimonial, i) => (
+                <div
+                  key={i}
+                  className={`transition-all duration-700 ${
+                    currentTestimonial === i ? 'block' : 'hidden'
+                  }`}
+                >
+                  <div className="bg-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-12 hover:shadow-[0_0_40px_rgba(255,255,255,0.2)] transition-all">
+                    <div className="flex items-center gap-6 mb-8">
+                      <img
+                        src={testimonial.avatar}
+                        alt={testimonial.name}
+                        className="w-20 h-20 rounded-full ring-4 ring-white/30 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                      />
+                      <div>
+                        <h4 className="text-2xl font-bold text-white mb-1">
+                          {testimonial.name}
+                        </h4>
+                        <p className="text-gray-300">{testimonial.role}</p>
+                      </div>
+                    </div>
+                    
+                    <p className="text-2xl text-white leading-relaxed mb-6 italic">
+                      "{testimonial.content}"
                     </p>
+                    
+                    <div className="flex gap-1">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="w-6 h-6 fill-white text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <p className="text-xl italic">
-                  "{testimonials[currentTestimonial].content}"
-                </p>
-                <div className="flex gap-1 mt-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-primary text-primary" />
-                  ))}
-                </div>
-              </motion.div>
-            </AnimatePresence>
+              ))}
+            </div>
 
-            <div className="flex justify-center gap-2 mt-6">
-              {testimonials.map((_, index) => (
+            <div className="flex justify-center gap-3 mt-8">
+              {testimonials.map((_, i) => (
                 <button
-                  key={index}
-                  onClick={() => setCurrentTestimonial(index)}
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all",
-                    currentTestimonial === index
-                      ? "bg-primary w-8"
-                      : "bg-muted-foreground/30"
-                  )}
+                  key={i}
+                  onClick={() => setCurrentTestimonial(i)}
+                  className={`h-2 rounded-full transition-all ${
+                    currentTestimonial === i ? 'w-12 bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'w-2 bg-white/30'
+                  }`}
                 />
               ))}
             </div>
@@ -467,44 +528,46 @@ export default function Landing() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-4xl mx-auto text-center space-y-8 bg-gradient-to-br from-primary/10 to-purple-600/10 rounded-3xl p-12"
-        >
-          <div className="flex justify-center">
-            <Heart className="w-16 h-16 text-primary animate-pulse" />
+      <section className="relative py-32 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="relative">
+            <div className="absolute inset-0 bg-white/10 rounded-3xl blur-3xl" />
+            <div className="relative bg-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-16 text-center hover:shadow-[0_0_50px_rgba(255,255,255,0.2)] transition-all">
+              <Rocket className="w-20 h-20 mx-auto mb-8 text-white animate-float drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]" />
+              
+              <h2 className="text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]">
+                Ready to Transform Your Future?
+              </h2>
+              
+              <p className="text-2xl text-gray-300 mb-12 max-w-2xl mx-auto">
+                Join 50,000+ students who are already building their dream careers
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button className="group relative px-10 py-5 bg-white text-black rounded-full font-bold text-xl overflow-hidden hover:scale-105 transition-transform hover:shadow-[0_0_40px_rgba(255,255,255,0.6)]">
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    <Zap className="w-6 h-6" />
+                    Get Started Free
+                  </span>
+                </button>
+                
+                <button className="px-10 py-5 rounded-full font-bold text-xl border-2 border-white/30 hover:border-white hover:bg-white/10 transition-all backdrop-blur-sm">
+                  Talk to an Expert
+                </button>
+              </div>
+            </div>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold">
-            Ready to Start Your Journey?
-          </h2>
-          <p className="text-xl text-muted-foreground">
-            Join thousands of students discovering their perfect career path
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Button size="lg" asChild className="gap-2">
-              <Link to="/interests">
-                <Zap className="w-5 h-5" />
-                Get Started Free
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/mindmap">Schedule a Demo</Link>
-            </Button>
-          </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center text-muted-foreground">
-          <p>© 2024 CareerVerse. Empowering students to discover their future.</p>
+      <footer className="relative py-12 px-4 sm:px-6 lg:px-8 border-t border-white/10">
+        <div className="max-w-7xl mx-auto text-center">
+          <p className="text-gray-400">
+            © 2024 CareerVerse. Empowering the next generation of professionals.
+          </p>
         </div>
       </footer>
     </div>
   );
 }
-
-
