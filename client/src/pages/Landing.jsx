@@ -275,18 +275,22 @@ export default function Landing() {
               transition={{ delay: 0.2, duration: 0.8 }}
             >
               <Badge className="mb-4" variant="secondary">
-                <Sparkles className="w-3 h-3 mr-1" />
-                Explore Your Future
+                <Sparkles className="w-3 h-3 mr-1 text-indigo-500 dark:text-yellow-400" />
+                <span className="text-indigo-700 dark:text-yellow-300">Explore Your Future</span>
               </Badge>
-              <h1 className="text-5xl md:text-7xl font-bold mb-6">
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-fuchsia-500 to-pink-500 dark:from-yellow-300 dark:via-pink-400 dark:to-purple-600">
                 Discover Your
                 <br />
-                <TextShimmer className="text-6xl md:text-8xl font-bold" duration={3}>
+                <TextShimmer
+                  className="text-6xl md:text-8xl font-bold !text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 dark:from-yellow-400 dark:via-pink-400 dark:to-fuchsia-500"
+                  duration={3}
+                >
                   Dream Career
                 </TextShimmer>
               </h1>
-              <p className="text-xl md:text-2xl text-neutral-600 dark:text-neutral-300 max-w-3xl mx-auto">
-                Explore 200+ career paths, connect with mentors, and build your future with confidence
+              <p className="text-xl md:text-2xl max-w-3xl mx-auto text-gradient bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-700 to-indigo-700 dark:from-yellow-200 dark:to-pink-300">
+                Explore <span className="font-bold text-indigo-600 dark:text-yellow-400">200+ career paths</span>, connect with <span className="font-bold text-pink-600 dark:text-pink-300">mentors</span>,
+                and build your <span className="font-bold text-fuchsia-700 dark:text-purple-300">future</span> with confidence.
               </p>
             </motion.div>
 
@@ -324,7 +328,7 @@ export default function Landing() {
                 className="text-center p-6 rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200 dark:border-neutral-800"
               >
                 <stat.icon className="w-8 h-8 mx-auto mb-2 text-primary" />
-                <div className="text-3xl font-bold mb-1">{stat.value}</div>
+                <div className="text-3xl font-bold mb-1 text-primary">{stat.value}</div>
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">{stat.label}</div>
               </motion.div>
             ))}
