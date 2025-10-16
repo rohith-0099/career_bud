@@ -202,7 +202,7 @@ const stats = [
 // Testimonials Data
 const testimonials = [
   {
-    name: "Sarah Johnson",
+    name: "Sarah John",
     role: "Software Engineer at Google",
     content: "CareerVerse helped me discover my passion for coding and land my dream job!",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
@@ -265,28 +265,7 @@ export default function Landing() {
           style={{ opacity, scale }}
           className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
         >
-          {/* Navigation */}
-          <motion.nav
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="flex justify-between items-center mb-20"
-          >
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-8 h-8 text-primary" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
-                CareerVerse
-              </span>
-            </div>
-            <div className="flex gap-2 sm:gap-4 items-center">
-              <Button variant="ghost" onClick={toggleTheme} aria-label="Toggle theme" className="px-2">
-                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </Button>
-              <Button variant="ghost">Sign In</Button>
-              <Button asChild>
-                <Link to="/interests">Get Started</Link>
-              </Button>
-            </div>
-          </motion.nav>
+          {/* Navigation removed: using global navbar in App.jsx */}
 
           {/* Hero Content */}
           <div className="text-center space-y-8">
